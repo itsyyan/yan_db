@@ -1,0 +1,457 @@
+package revision_4;
+
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.Vector;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+public class Revision_4 implements ActionListener{
+    
+    JFrame frame;
+    JLabel lbl_title;
+    JPanel pnl_east, pnl_north, pnl_west, pnl_in_box1, pnl_in_box2, pnl_in_box3, pnl_in_box4, pnl_in_box5, pnl_in_box6, pnl_in_box_btn;
+    JLabel lbl_name, lbl_gender, lbl_shift, lbl_age, lbl_uid, lbl_fetch;
+    JComboBox cbo_name, cbo_gender, cbo_shift;
+    JTextField txt_age, txt_uid, txt_fetch;
+    JButton btn_insert, btn_delete, btn_fetch, btn_update;
+    ImageIcon logo;
+    JTable table;
+    JScrollPane sp;
+    JLabel lbl_icon;
+    JSeparator sep1, sep2;
+    
+    String db_username = "root";
+    String db_pwd = "";
+    String db_url = "jdbc:mysql://localhost:3306/revision";
+    Connection conn;
+    
+    ResultSet rs = null;
+    
+    public static final Color myColor1 = new Color(165, 85, 236);
+    
+    Font font = new Font("San-serif", Font.BOLD, 30);
+    
+    String name [] = {"Wednesday", "Tyler", "Xavier"};
+    String gender [] = {"Male", "Female"};
+    String shift [] = {"Morning", "Evening", "Night"};
+    
+    Revision_4(){
+        
+        frame = new JFrame("Starbucks Staff System");
+        
+        pnl_west = new JPanel();
+        pnl_west.setLayout(new BoxLayout(pnl_west,BoxLayout.Y_AXIS));
+        pnl_north = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        
+        //sep
+        sep1 = new JSeparator();
+        sep2 = new JSeparator();
+        
+        //ImageIcon
+        logo = new ImageIcon(getClass().getResource("starbucks.png"));
+        lbl_icon = new JLabel(logo);
+
+        //title
+        lbl_title = new JLabel("Starbucks System");
+        lbl_title.setFont(font);
+        lbl_title.setForeground(myColor1);
+        pnl_north.add(lbl_title);
+        pnl_north.add(lbl_icon);
+        
+        //cbo1
+        pnl_in_box1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lbl_name = new JLabel("Name");
+        lbl_name.setPreferredSize(new Dimension(120,20));
+        cbo_name = new JComboBox(name);
+        cbo_name.setPreferredSize(new Dimension(120,20));
+        pnl_in_box1.add(lbl_name);
+        pnl_in_box1.add(cbo_name);
+        
+        //cbo2
+        pnl_in_box2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lbl_gender = new JLabel("Gender");
+        lbl_gender.setPreferredSize(new Dimension(120,20));
+        cbo_gender = new JComboBox(gender);
+        cbo_gender.setPreferredSize(new Dimension(120,20));
+        pnl_in_box2.add(lbl_gender);
+        pnl_in_box2.add(cbo_gender);
+        
+        //cbo3
+        pnl_in_box3 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lbl_shift = new JLabel("Shift");
+        lbl_shift.setPreferredSize(new Dimension(120,20));
+        cbo_shift = new JComboBox(shift);
+        cbo_shift.setPreferredSize(new Dimension(120,20));
+        pnl_in_box3.add(lbl_shift);
+        pnl_in_box3.add(cbo_shift);
+        
+        //txt-age
+        pnl_in_box4 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lbl_age = new JLabel("Age");
+        lbl_age.setPreferredSize(new Dimension(120,20));
+        txt_age = new JTextField(9);
+        pnl_in_box4.add(lbl_age);
+        pnl_in_box4.add(txt_age);
+        
+        //txt-uid
+        pnl_in_box5 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lbl_uid = new JLabel("UID");
+        lbl_uid.setPreferredSize(new Dimension(120,20));
+        txt_uid = new JTextField(9);
+        pnl_in_box5.add(lbl_uid);
+        pnl_in_box5.add(txt_uid);
+        
+        //txt-fetch
+        pnl_in_box6 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        lbl_fetch = new JLabel("Fetch");
+        lbl_fetch.setPreferredSize(new Dimension(120,20));
+        txt_fetch = new JTextField(9);
+        pnl_in_box6.add(lbl_fetch);
+        pnl_in_box6.add(txt_fetch);
+        
+        //table
+        pnl_east = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        try{
+            table = new JTable();
+            draw_table();
+            sp = new JScrollPane(table);
+            sp.setPreferredSize(new Dimension(600,200));
+            sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        }catch(Exception ex){
+            
+        }
+        
+        //buttons
+        pnl_in_box_btn = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        btn_insert = new JButton("Insert");
+        btn_insert.addActionListener(this);
+        btn_delete = new JButton("Delete");
+        btn_delete.addActionListener(this);
+        btn_update = new JButton("Update");
+        btn_update.addActionListener(this);
+        btn_fetch = new JButton("Fetch");
+        btn_fetch.addActionListener(this);
+        pnl_in_box_btn.add(btn_insert);
+        pnl_in_box_btn.add(btn_delete);
+        pnl_in_box_btn.add(btn_update);
+        pnl_in_box_btn.add(btn_fetch);
+        
+        //color
+        cbo_name.setBackground(myColor1);
+        cbo_gender.setBackground(myColor1);
+        cbo_shift.setBackground(myColor1);
+        btn_insert.setBackground(myColor1);
+        btn_delete.setBackground(myColor1);
+        btn_update.setBackground(myColor1);
+        btn_fetch.setBackground(myColor1);
+        
+        btn_insert.setForeground(Color.WHITE);
+        btn_delete.setForeground(Color.WHITE);
+        btn_update.setForeground(Color.WHITE);
+        btn_fetch.setForeground(Color.WHITE);
+        cbo_name.setForeground(Color.WHITE);
+        cbo_gender.setForeground(Color.WHITE);
+        cbo_shift.setForeground(Color.WHITE);
+        
+        pnl_west.add(sep1);
+        pnl_west.add(pnl_in_box1);
+        pnl_west.add(pnl_in_box2);
+        pnl_west.add(pnl_in_box3);
+        pnl_west.add(pnl_in_box4);
+        pnl_west.add(pnl_in_box5);
+        pnl_west.add(pnl_in_box6);
+        pnl_west.add(sep2);
+        pnl_west.add(pnl_in_box_btn);
+        pnl_east.add(sp);
+        
+        //frame - add
+        frame.add(pnl_west, BorderLayout.WEST);
+        frame.add(pnl_north, BorderLayout.NORTH);
+        frame.add(pnl_east, BorderLayout.EAST);
+        
+        frame.pack();
+        frame.setVisible(true);
+        
+    }
+    
+    public  DefaultTableModel buildTableModel(ResultSet rs)
+            throws SQLException {
+
+        ResultSetMetaData metaData = rs.getMetaData();
+        String[] column_title = {"Name", "Gender", "Shift", "Age","UID"};
+        Vector<String> columnNames = new Vector<String>();
+        columnNames.add("Name");
+        columnNames.add("Gender");
+        columnNames.add("Shift");
+        columnNames.add("Age");
+        columnNames.add("UID");
+
+        int columnCount = metaData.getColumnCount();
+        
+        // data of the table
+        Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+        while (rs.next()) {
+            Vector<Object> vector = new Vector<Object>();
+            for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+                vector.add(rs.getObject(columnIndex));
+            }
+            data.add(vector);
+        }
+
+        return new DefaultTableModel(data, columnNames);
+
+    }
+    
+    public static void main(String[] args) {
+        Revision_4 apps = new Revision_4();
+        
+    }
+    
+    public void update(){
+        try{
+            //Load Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            
+            //Establish Connection
+            conn = DriverManager.getConnection(db_url, db_username, db_pwd);
+            
+            //Database Operation
+            String sql = "UPDATE table4 SET name=?, gender = ?, shift=?, age=? where uid = ?";
+            
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, cbo_name.getSelectedItem().toString());
+            stmt.setString(2, cbo_gender.getSelectedItem().toString());
+            stmt.setString(3, cbo_shift.getSelectedItem().toString());
+            stmt.setString(4, txt_age.getText());
+//            stmt.setString(5, txt_uid.getText());
+            stmt.setInt(5, Integer.parseInt(txt_uid.getText()));
+            
+            int update;
+            update = stmt.executeUpdate();
+            
+            if(update>0){
+                //Success
+                JOptionPane.showMessageDialog(frame, "Update Operation Success!");
+                clear_form();
+            }
+            else{
+                JOptionPane.showMessageDialog(frame, "Update Operation Failed!");
+                //Fail
+            }
+            
+            draw_table();
+            
+        }catch(Exception ex){
+            JOptionPane.showMessageDialog(frame, "Error: "+ex);
+        }
+    }
+    
+    public void delete(){
+        try{
+            //Load Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            
+            //Establish Connection
+            conn = DriverManager.getConnection(db_url, db_username, db_pwd);
+            
+            //Database Operation
+            String sql = "Delete from table4 where uid = ?";
+            
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, Integer.parseInt(txt_uid.getText()));
+            
+            int delete;
+            delete = stmt.executeUpdate();
+            
+            if(delete>0){
+                //Success
+                JOptionPane.showMessageDialog(frame, "Delete Operation Success!");
+                clear_form();
+            }
+            else{
+                JOptionPane.showMessageDialog(frame, "Delete Operation Failed!");
+                //Fail
+            }
+            
+            draw_table();
+            clear_form();
+            
+        }catch(Exception ex){
+            JOptionPane.showMessageDialog(frame, "Error: "+ex);
+        }
+    }
+    
+    public boolean validation_fetch(){
+        boolean is_empty = true;
+        String param1 = txt_fetch.getText();
+        if(param1 == "" || param1.length()==0){
+            is_empty = true;
+        }
+        else{
+            is_empty = false;
+        }
+        
+        return is_empty;
+    }
+    
+    public void insert_data(){
+        
+        if(validation_form() == false){
+            try{
+             //Load Driver
+             Class.forName("com.mysql.cj.jdbc.Driver");
+
+             //Establish Connection
+             conn = DriverManager.getConnection(db_url, db_username, db_pwd);
+
+             //Database Operation
+             String sql_insert = "INSERT INTO table4 (name, gender, shift, age) VALUES (?, ?, ?, ?)";
+             PreparedStatement stmt = conn.prepareStatement(sql_insert);
+             stmt.setString(1, cbo_name.getSelectedItem().toString());
+             stmt.setString(2, cbo_gender.getSelectedItem().toString());
+             stmt.setString(3, cbo_shift.getSelectedItem().toString());
+             stmt.setString(4, txt_age.getText());
+
+             int insert;
+             insert = stmt.executeUpdate();
+
+             if(insert>0){
+                 //Success
+                 JOptionPane.showMessageDialog(frame, "Insert Operation Success!");
+             }
+             else{
+                 JOptionPane.showMessageDialog(frame, "Insert Operation Failed!");
+                 //Fail
+             }
+
+             draw_table();
+             clear_form();
+             }catch(Exception ex){
+                JOptionPane.showMessageDialog(frame, "Error: "+ex);
+            } 
+        }
+        else{
+            JOptionPane.showMessageDialog(frame, "Please enter data");
+        }
+        
+     }
+    
+    public void set_data(){
+        //Fetch Single Data
+        if(validation_fetch()== false){
+            //not empty
+            int uid;
+            //Set uid var
+            uid = Integer.parseInt(txt_fetch.getText());
+
+            try{
+                Class.forName("com.mysql.cj.jdbc.Driver");
+                conn = DriverManager.getConnection(db_url, db_username, db_pwd);
+                String sql = "Select * from table4 where uid = ?";
+                PreparedStatement statement = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                statement.setInt(1, uid);
+                //Insert data from datbase to resultset
+                rs = statement.executeQuery();
+
+                //Read data from resultset to form
+                if(rs.next()){                
+                    rs.beforeFirst();
+                    while(rs.next()){
+
+                    cbo_name.setSelectedItem(rs.getString("name"));
+                    cbo_gender.setSelectedItem(rs.getString("gender"));
+                    cbo_shift.setSelectedItem(rs.getString("shift"));
+                    txt_age.setText(rs.getString("age"));
+//                    txt_vendor.setText(rs.getString("material_vendor"));
+                    txt_uid.setText(rs.getString("uid"));
+                    
+                    }
+                    JOptionPane.showMessageDialog(frame, "Data Fetched!");
+//                    display_delete_update();
+//                    hide_insert();
+                }
+                else{
+                    JOptionPane.showMessageDialog(frame, "There is no data with that ID..");
+                }
+
+
+            }catch(Exception ex){
+                JOptionPane.showMessageDialog(frame, "Error:"+ex);
+            }
+        }
+        else{
+            //empty
+            JOptionPane.showMessageDialog(frame, "Please Enter an ID");
+        }
+        
+    }
+    
+    
+    
+    public void draw_table() throws SQLException{
+        fetch_all();
+        table.setModel(buildTableModel(rs));
+    }
+    
+    public void clear_form(){
+        cbo_name.setSelectedIndex(0);
+        cbo_gender.setSelectedIndex(0);
+        cbo_shift.setSelectedIndex(0);
+        txt_age.setText("");
+        txt_uid.setText("");
+    }
+    
+    public boolean validation_form(){
+        boolean is_empty = true;
+        //String param1 = txt_ic.getText();
+        if(txt_age.getText().length() == 0 || txt_age.getText().length() == 0){
+            is_empty = true;
+        }
+        else{
+            try{
+                Integer.parseInt(txt_age.getText());
+                is_empty = false;
+            }catch(Exception e){
+                is_empty = true;
+            }
+        }
+        return is_empty;
+    }
+    
+    public void fetch_all(){
+        try{
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection(db_url, db_username, db_pwd);
+            String sql = "Select * from table4";
+            PreparedStatement statement = conn.prepareStatement(sql);
+            
+            rs = statement.executeQuery();
+        }catch(Exception ex){
+            JOptionPane.showMessageDialog(frame, "Error:"+ex);
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if(e.getSource()==btn_insert){
+            insert_data();
+        }
+        if(e.getSource()==btn_delete){
+            delete();
+        }
+        if(e.getSource()== btn_fetch){
+            set_data();
+        }
+        if(e.getSource()== btn_update){
+            update();
+        }
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+}
